@@ -5,7 +5,7 @@ import 'package:p3_movie/model/movie.dart';
 
 // 18361ad82497ec1cf55ca10b74f1d3750'; <- This is a dummy key
 class APIRunner {
-  final String api_key = 'api_key=YOUR_KEY';
+  final String api_key = 'api_key=2089f5b7283e2d6cb3e59ca839b91c99'; // Had to make this my moviedb api key
   final String urlBase = 'https://api.themoviedb.org/3';
   final String apiUpcoming = '/movie/upcoming?';
   final String apiSearch = '/search/movie?';
@@ -41,9 +41,8 @@ class APIRunner {
   }
 
   Future<List?> searchMovie(String title) async {
-    final String search =
-        urlBase + apiSearch + 'query=' + title + '&' + api_key;
-    ;
+    final String encodedTitle = Uri.encodeComponent(title);
+    final String search = urlBase + apiSearch + 'query=' + encodedTitle + '&' + api_key;
     return runAPI(search);
   }
 }
