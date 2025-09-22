@@ -40,7 +40,7 @@ paginate: true
 ### David-Michael
 
 - Refactored search functionality
-- Implemented search by genre feature
+- Enabled the user to sort the list of movies by title, release date or rating
 - Continuing to work on ensuring that the titles are listed in alphabetical order within each Genre list
 
 ---
