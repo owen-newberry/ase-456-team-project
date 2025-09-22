@@ -24,8 +24,11 @@ paginate: true
 ## Week 2 Goals
 
 **Progress**: 4/10 (40%)
+**Total LoC**: 346
 
 ### Cley
+
+**LoC**: 105
 
 - Implemented user signup and authentication
 - Ensure users who are signed in have proper access
@@ -34,10 +37,14 @@ paginate: true
 
 ### Austin
 
+**LoC**: 120
+
 - Completed base layout for review description feature
 - Continuing to work on implementing review system
 
 ### David-Michael
+
+**LoC**: 121
 
 - Refactored search functionality
 - Enabled the user to sort the list of movies by title, release date or rating
