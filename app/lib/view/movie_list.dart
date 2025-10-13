@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:p3_movie/util/api.dart';
 import 'movie_detail.dart';
 import '../model/movie.dart';
+import 'profile_page.dart';
 
 enum SortOption { title, releaseDate, voteAverage }
 
@@ -37,7 +38,7 @@ class _MovieListState extends State<MovieList> {
   late APIRunner helper;
   int moviesCount = 0;
   List<Movie> movies = [];
-
+  
   // Sorting state
   SortOption _selectedOption = SortOption.title;
   bool _ascending = true;
@@ -81,6 +82,16 @@ class _MovieListState extends State<MovieList> {
                 this.searchBar = Text('Movies');
               }
             });
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.account_circle),
+          tooltip: 'Profile',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => ProfilePage()),
+            );
           },
         ),
       ]),
