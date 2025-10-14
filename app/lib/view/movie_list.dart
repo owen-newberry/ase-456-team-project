@@ -3,9 +3,13 @@ import 'package:p3_movie/util/api.dart';
 import 'movie_detail.dart';
 
 class MovieList extends StatefulWidget {
+  final String? status; 
+  const MovieList({Key? key, this.status}) : super(key: key);
+
   @override
   _MovieListState createState() => _MovieListState();
 }
+
 
 class _MovieListState extends State<MovieList> {
   String? result;

@@ -1,21 +1,21 @@
 class Review {
   final int? id;
   final String movie;
-  final String user;
+  final String? user_id; // changed from 'user' to 'user_id'
   final String comment;
 
-  Review ({
+  Review({
     this.id,
     required this.movie,
-    required this.user,
-    required this.comment
+    this.user_id,
+    required this.comment,
   });
 
   factory Review.fromJson(Map<String, dynamic> json) {
     return Review(
       id: json['id'],
       movie: json['movie'],
-      user: json['user'],
+      user_id: json['user_id'], // match the column in Supabase
       comment: json['comment'],
     );
   }
@@ -23,7 +23,7 @@ class Review {
   Map<String, dynamic> toJson() {
     return {
       'movie': movie,
-      'user': user,
+      'user_id': user_id,
       'comment': comment,
     };
   }
