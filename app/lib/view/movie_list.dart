@@ -27,16 +27,22 @@ List<Movie> sortMovies(List<Movie> inMovies, SortOption option, {bool ascending 
   });
   return list;
 }
+class _ModeSwitchState extends StatefulWidget {
+  @override
+  _ModeSwitchState createState() => _ModeSwitchState();
+}
 
 class MovieList extends StatefulWidget {
   @override
   _MovieListState createState() => _MovieListState();
 }
 
+
 class _MovieListState extends State<MovieList> {
   late APIRunner helper;
   int moviesCount = 0;
   List<Movie> movies = [];
+  
 
   // Sorting state
   SortOption _selectedOption = SortOption.title;
@@ -55,7 +61,8 @@ class _MovieListState extends State<MovieList> {
     helper = APIRunner();
     initialize();
   }
-
+  //Light/Dark mode Toggle
+  //End Light/Dark mode Toggle
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -146,6 +153,7 @@ class _MovieListState extends State<MovieList> {
               },
             ),
           ),
+          
         ],
       ),
     );
