@@ -18,6 +18,7 @@ class _MovieDetailState extends State<MovieDetail> {
   List<Review> reviews = [];
   bool loading = false;
   String? movieStatus; // tracks current user's movie status
+  int _selectedRating = 0;
 
   @override
   void initState() {
@@ -102,8 +103,10 @@ class _MovieDetailState extends State<MovieDetail> {
 
     final newReview = {
       'movie': widget.movie.title,
-      'user_id': currentUser.id, 
+      'user_id': currentUser.id,
+      'username': currentUser.email,
       'comment': commentController.text,
+      'rating': _selectedRating,
     };
 
     final response = await Supabase.instance.client
@@ -139,7 +142,7 @@ class _MovieDetailState extends State<MovieDetail> {
             children: [
               // Poster
               Container(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 height: height / 1.5,
                 child: Image.network(path),
               ),
@@ -190,15 +193,36 @@ class _MovieDetailState extends State<MovieDetail> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Add a Review!",
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Add a Review!",
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
                     TextField(
                       controller: commentController,
                       decoration:
                           const InputDecoration(labelText: "Your Review"),
                     ),
                     const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        int starIndex = index + 1;
+                        return IconButton(
+                          icon: Icon(
+                            Icons.star,
+                            color: _selectedRating >= starIndex
+                                ? Colors.amber
+                                : Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _selectedRating = starIndex;
+                            });
+                          },
+                        );
+                      }),
+                    ),
                     ElevatedButton(
                       onPressed: _addReview,
                       child: const Text("Submit"),
@@ -212,9 +236,11 @@ class _MovieDetailState extends State<MovieDetail> {
               // Reviews List
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: const Text("Reviews",
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  "Reviews",
+                  style: TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
               Container(
                 height: 250,
@@ -222,15 +248,33 @@ class _MovieDetailState extends State<MovieDetail> {
                     ? const Center(child: CircularProgressIndicator())
                     : reviews.isEmpty
                         ? const Center(
-                            child: Text("No reviews yet. Be the first!"))
+                            child: Text("No reviews yet. Be the first!"),
+                          )
                         : ListView.builder(
                             itemCount: reviews.length,
                             itemBuilder: (context, index) {
                               final r = reviews[index];
                               return Card(
                                 child: ListTile(
-                                  title: Text(r.user_id ?? "Anonymous"),
-                                  subtitle: Text(r.comment),
+                                  title: Text(r.username ?? "Anonymous"),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: List.generate(5, (i) {
+                                          return Icon(
+                                            Icons.star,
+                                            size: 18,
+                                            color: i < (r.rating ?? 0)
+                                                ? Colors.amber
+                                                : Colors.grey,
+                                          );
+                                        }),
+                                      ),
+                                      Text(r.comment),
+                                    ],
+                                  ),
                                 ),
                               );
                             },
