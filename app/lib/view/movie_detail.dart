@@ -30,6 +30,17 @@ class MovieDetail extends StatelessWidget {
               Container(
                 padding: EdgeInsets.only(left: 16, right: 16),
                 child: Text(movie.overview),
+              ),
+              //
+              Container(
+                padding: EdgeInsets.all(16),
+                child: 
+                  IconButton(
+                    icon: const Icon(Icons.play_circle),
+                    color: Colors.red,
+                    iconSize: 100.0, 
+                    onPressed: () {},
+                ),
               )
             ],
           ),

@@ -28,11 +28,18 @@ List<Movie> sortMovies(List<Movie> inMovies, SortOption option, {bool ascending 
   });
   return list;
 }
-class _ModeSwitchState extends StatefulWidget {
+
+class ModeSwitch extends StatefulWidget {
   @override
   _ModeSwitchState createState() => _ModeSwitchState();
 }
 
+class _ModeSwitchState extends State<ModeSwitch> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(); // Replace with your widget UI
+  }
+}
 class MovieList extends StatefulWidget {
   @override
   _MovieListState createState() => _MovieListState();
