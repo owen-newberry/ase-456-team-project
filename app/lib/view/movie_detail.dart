@@ -244,7 +244,7 @@ class _MovieDetailState extends State<MovieDetail> {
               ),
               Container(
                 padding: EdgeInsets.only(left: 16, right: 16),
-                child: Text(movie.overview),
+                child: Text(widget.movie.overview),
               ),
               //
               Container(
