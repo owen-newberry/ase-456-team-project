@@ -243,43 +243,20 @@ class _MovieDetailState extends State<MovieDetail> {
                 ),
               ),
               Container(
-                height: 250,
-                child: loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : reviews.isEmpty
-                        ? const Center(
-                            child: Text("No reviews yet. Be the first!"),
-                          )
-                        : ListView.builder(
-                            itemCount: reviews.length,
-                            itemBuilder: (context, index) {
-                              final r = reviews[index];
-                              return Card(
-                                child: ListTile(
-                                  title: Text(r.username ?? "Anonymous"),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: List.generate(5, (i) {
-                                          return Icon(
-                                            Icons.star,
-                                            size: 18,
-                                            color: i < (r.rating ?? 0)
-                                                ? Colors.amber
-                                                : Colors.grey,
-                                          );
-                                        }),
-                                      ),
-                                      Text(r.comment),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                padding: EdgeInsets.only(left: 16, right: 16),
+                child: Text(movie.overview),
               ),
+              //
+              Container(
+                padding: EdgeInsets.all(16),
+                child: 
+                  IconButton(
+                    icon: const Icon(Icons.play_circle),
+                    color: Colors.red,
+                    iconSize: 100.0, 
+                    onPressed: () {},
+                ),
+              )
             ],
           ),
         ),
