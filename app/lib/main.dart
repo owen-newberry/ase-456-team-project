@@ -30,6 +30,7 @@ class MyMovies extends StatelessWidget {
   }
 }
 
+
 /// AuthPage: handles login and signup
 class AuthPage extends StatefulWidget {
   @override

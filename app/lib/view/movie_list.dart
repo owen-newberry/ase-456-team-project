@@ -42,7 +42,14 @@ class _ModeSwitchState extends State<ModeSwitch> {
 }
 class MovieList extends StatefulWidget {
   @override
-  _MovieListState createState() => _MovieListState();
+    _MovieListState createState() => _MovieListState();
+  final bool isDarkMode; // NEW
+  final ValueChanged<bool> onThemeChanged; // NEW
+  MovieList({ // UPDATED
+    super.key,
+    required this.isDarkMode,
+    required this.onThemeChanged,
+  });
 }
 
 
