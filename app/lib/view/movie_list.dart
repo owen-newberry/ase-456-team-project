@@ -7,6 +7,7 @@ import 'dart:math';
 
 
 enum SortOption { title, releaseDate, voteAverage }
+enum ContentMode { movies, tv }
 
 // Sort helper (works on a copy)
 List<Movie> sortMovies(List<Movie> inMovies, SortOption option, {bool ascending = true}) {
@@ -65,6 +66,10 @@ class _MovieListState extends State<MovieList> {
   SortOption _selectedOption = SortOption.title;
   bool _ascending = true;
 
+  // Toggle between Movies and Shows
+  ContentMode _mode = ContentMode.movies;
+
+
   final String iconBase = 'https://image.tmdb.org/t/p/w92/';
   final String defaultImage =
       'https://images.freeimages.com/images/large-previews/5eb/movie-clapboard-1184339.jpg';
@@ -101,7 +106,7 @@ class _MovieListState extends State<MovieList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: searchBar, actions: <Widget>[
-        IconButton(
+        IconButton( // Search
           icon: visibleIcon,
           onPressed: () {
             setState(() {
@@ -123,7 +128,18 @@ class _MovieListState extends State<MovieList> {
               }
             });
           },
-        ),
+        ), // Movie or TV Show Toggle
+        IconButton(
+          icon: Icon(_mode == ContentMode.movies ? Icons.movie : Icons.tv),
+          tooltip: _mode == ContentMode.movies ? 'Switch to TV Shows' : 'Switch to Movies',
+          onPressed: () {
+            setState(() {
+              _mode = _mode == ContentMode.movies ? ContentMode.tv : ContentMode.movies;
+              searchBar = Text(_mode == ContentMode.movies ? 'Movies' : 'TV Shows');
+            });
+            initialize();
+          },
+        ), // Profile Button
         IconButton(
           icon: const Icon(Icons.account_circle),
           tooltip: 'Profile',
@@ -267,16 +283,20 @@ class _MovieListState extends State<MovieList> {
   }
 
   Future<void> initialize() async {
+    debugPrint('[initialize] mode: ${_mode}');
     try {
-      debugPrint('[initialize] fetching upcoming');
-      final raw = await helper.getUpcoming();
-      debugPrint('[initialize] raw result type: ${raw.runtimeType}');
+      debugPrint('[initialize] fetching ${_mode == ContentMode.movies ? 'movies' : 'TV Shows'}');
+      
+      final raw = _mode == ContentMode.movies ? await helper.getUpcomingMovies() : await helper.getPopularShows();
+
       final results = _toMovieList(raw);
-      debugPrint('[initialize] parsed ${results.length} movies');
+      debugPrint('[initialize] parsed ${results.length} items');
+
       final sortedResult = sortMovies(results, _selectedOption, ascending: _ascending);
       setState(() {
         movies = sortedResult;
         moviesCount = movies.length;
+        searchBar = Text(_mode == ContentMode.movies ? 'Movies' : 'TV Shows');
       });
     } catch (e, st) {
       debugPrint('[initialize] error: $e\n$st');

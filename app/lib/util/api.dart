@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:p3_movie/model/movie.dart';
@@ -7,35 +8,37 @@ import 'package:p3_movie/model/movie.dart';
 class APIRunner {
   final String api_key = 'api_key=2089f5b7283e2d6cb3e59ca839b91c99'; // Had to make this my moviedb api key
   final String urlBase = 'https://api.themoviedb.org/3';
-  final String apiUpcoming = '/movie/upcoming?';
-  final String apiSearch = '/search/movie?';
   final String urlLanguage = '&language=en-US';
 
-  Future<List?> runAPI(API) async {
-    http.Response result = await http.get(Uri.parse(API));
-    if (result.statusCode == HttpStatus.ok) {
-      final jsonResponse = json.decode(result.body);
-      final moviesMap = jsonResponse['results'];
-      try {
-        var movies = moviesMap.map((i) => Movie.fromJson(i)).toList();
-        print('Successfully parsed ${movies.length} movies');
-        return movies;
-      } catch (e) {
-        print('Error parsing movies: $e');
-        return <Movie>[]; // Return empty list on error
-      }
+  // Movie Endpoints
+  final String apiUpcoming = '/movie/upcoming?';
+  final String apiSearch = '/search/movie?';
+
+  //TV Endpoints
+  final String apiPopularTV = '/tv/popular?';
+  final String apiAiringToday = '/tv/airing_today?';
+  final String apiTopRatedTV = '/tv/top_rated?';
+  final String apiSearchTV = '/search/tv?';
+
+  Future<List<Movie>?> runAPI(API) async {
+    final response = await http.get(Uri.parse(API));
+    
+    if (response.statusCode == HttpStatus.ok) {
+      final jsonResponse = json.decode(response.body);
+      final List<dynamic> results = jsonResponse['results'] ?? [];
+      
+      final movies = results.map((item) => Movie.fromJson(item)).toList();
+
+      debugPrint('Successfully parsed ${movies.length} movies');
+      return movies;
     } else {
-      print('Request failed with status: ${result.statusCode}.');
-      print('Response body: ${result.body}');
-      print('API URL: $API');
-      // Handle the error appropriately, maybe throw an exception or return null
-      // For now, we just return null
-      // You might want to log this error or handle it in a way that informs the user
-      return null;
+      debugPrint('Request failed with status: ${response.statusCode}');
+      return [];
     }
   }
-
-  Future<List?> getUpcoming() async {
+  
+  // Movie Functions
+  Future<List?> getUpcomingMovies() async {
     final String upcomingAPI = urlBase + apiUpcoming + api_key + urlLanguage;
     return runAPI(upcomingAPI);
   }
@@ -44,5 +47,22 @@ class APIRunner {
     final String encodedTitle = Uri.encodeComponent(title);
     final String search = urlBase + apiSearch + 'query=' + encodedTitle + '&' + api_key;
     return runAPI(search);
+  }
+
+  // Tv Show Functions
+  Future<List<Movie>?> getPopularShows() async {
+    final String api = urlBase + apiPopularTV + api_key + urlLanguage;
+    return runAPI(api);
+  }
+
+  Future<List<Movie>?> getTopRatedTV() async {
+    final String api = urlBase + apiTopRatedTV + api_key + urlLanguage;
+    return runAPI(api);
+  }
+
+  Future<List<Movie>?> searchTVShow(String title) async {
+    final String encodedTitle = Uri.encodeComponent(title);
+    final String api = urlBase + apiSearchTV + 'query=' + encodedTitle + '&' + api_key;
+    return runAPI(api);
   }
 }
