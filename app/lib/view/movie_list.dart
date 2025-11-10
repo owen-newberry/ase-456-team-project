@@ -4,6 +4,7 @@ import 'movie_detail.dart';
 import '../model/movie.dart';
 import 'profile_page.dart';
 import 'dart:math';
+import 'dart:async';
 
 
 enum SortOption { title, releaseDate, voteAverage }
@@ -61,7 +62,10 @@ class _MovieListState extends State<MovieList> {
   late APIRunner helper;
   int moviesCount = 0;
   List<Movie> movies = [];
-  
+  List<Movie> ogMovies = [];
+  TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
   // Sorting state
   SortOption _selectedOption = SortOption.title;
   bool _ascending = true;
@@ -113,18 +117,26 @@ class _MovieListState extends State<MovieList> {
               if (this.visibleIcon.icon == Icons.search) {
                 this.visibleIcon = Icon(Icons.cancel);
                 this.searchBar = TextField(
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: (String text) {
-                    search(text);
-                  },
+                  controller: _searchController,
+                  autofocus: true,
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 20.0,
                   ),
+                  decoration: InputDecoration(
+                    hintText: _mode == ContentMode.movies ? 'Search Movies...' : 'Search TV Shows...',
+                    border: InputBorder.none,
+                  ),
+                  onChanged: (text) {
+                    _onSearchChanged(text);
+                  },
                 );
               } else {
                 this.visibleIcon = Icon(Icons.search);
-                this.searchBar = Text('Movies');
+                this.searchBar = Text(_mode == ContentMode.movies ? 'Movies' : 'TV Shows');
+                _searchController.clear();
+                movies = List<Movie>.from(ogMovies);
+                moviesCount = movies.length;
               }
             });
           },
@@ -295,6 +307,7 @@ class _MovieListState extends State<MovieList> {
       final sortedResult = sortMovies(results, _selectedOption, ascending: _ascending);
       setState(() {
         movies = sortedResult;
+        ogMovies = List<Movie>.from(sortedResult);
         moviesCount = movies.length;
         searchBar = Text(_mode == ContentMode.movies ? 'Movies' : 'TV Shows');
       });
@@ -305,6 +318,45 @@ class _MovieListState extends State<MovieList> {
         moviesCount = 0;
       });
     }
+  }
+
+  void _onSearchChanged(String query) {
+    if(_debounce?.isActive ?? false) _debounce!.cancel();
+
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      if(query.isEmpty) {
+        setState(() {
+          movies = List<Movie>.from(ogMovies);
+          moviesCount = movies.length;
+        });
+        return;
+      }
+      try {
+        final raw = _mode == ContentMode.movies
+          ? await helper.searchMovie(query)
+          : await helper.searchTVShow(query);
+        final results = _toMovieList(raw);
+        final sortedResults = sortMovies(results, _selectedOption, ascending: _ascending);
+
+        setState(() {
+          movies = sortedResults;
+          moviesCount = movies.length;
+        });
+      } catch (e, st) {
+        debugPrint('[_onSearchChanged] error: $e\n$st');
+        setState(() {
+          movies = [];
+          moviesCount = 0;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
   }
 
   // Optional: temporary test helper to verify UI works without the API
