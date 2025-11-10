@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:p3_movie/view/movie_list.dart';
+final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
 
 
 
@@ -19,14 +20,28 @@ Future<void> main() async {
 class MyMovies extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'My Movies',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.deepOrange,
-      ),
-      home: AuthPage(), // start with login/signup
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (_, mode, __) {
+        return MaterialApp(
+          title: 'My Movies',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            primarySwatch: Colors.deepOrange,
+            brightness: Brightness.light,
+            cardColor: Colors.white
+          ),
+          darkTheme: ThemeData(
+            primarySwatch: Colors.deepOrange,
+            brightness: Brightness.dark,
+            cardColor: Colors.black
+          ),
+          themeMode: mode,
+          home: AuthPage(),
+        );
+      },
     );
+
   }
 }
 
@@ -55,7 +70,14 @@ class _AuthPageState extends State<AuthPage> {
           // go to MovieList after login
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => MovieList()),
+            MaterialPageRoute(
+              builder: (_) => MovieList(
+                isDarkMode: themeNotifier.value == ThemeMode.dark,
+                onThemeChanged: (isDark) {
+                  themeNotifier.value = isDark ? ThemeMode.dark : ThemeMode.light;
+                },
+              ),
+            ),
           );
         }
       } else {
@@ -67,8 +89,15 @@ class _AuthPageState extends State<AuthPage> {
           // after signup, you can log them in automatically or require confirmation
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => MovieList()),
-          );
+            MaterialPageRoute(
+              builder: (_) => MovieList(
+                isDarkMode: themeNotifier.value == ThemeMode.dark,
+                onThemeChanged: (isDark) {
+                  themeNotifier.value = isDark ? ThemeMode.dark : ThemeMode.light;
+                },
+              ),
+            ),
+          ); 
         }
       }
     } on AuthException catch (e) {

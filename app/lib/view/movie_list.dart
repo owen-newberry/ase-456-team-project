@@ -75,8 +75,6 @@ class _MovieListState extends State<MovieList> {
     helper = APIRunner();
     initialize();
   }
-  //Light/Dark mode Toggle
-  //End Light/Dark mode Toggle
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,6 +116,15 @@ class _MovieListState extends State<MovieList> {
       body: Column(
         children: [
           // Sorting controls
+          // NEW: Light/Dark mode toggle
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: SwitchListTile(
+              title: const Text('Dark Mode'),
+              value: widget.isDarkMode,
+              onChanged: widget.onThemeChanged,
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -162,7 +169,9 @@ class _MovieListState extends State<MovieList> {
                     : NetworkImage(defaultImage);
 
                 return Card(
-                  color: Colors.white,
+                  color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.black
+                    : Colors.white,
                   elevation: 2.0,
                   child: ListTile(
                     onTap: () {
