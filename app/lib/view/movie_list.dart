@@ -3,6 +3,8 @@ import 'package:p3_movie/util/api.dart';
 import 'movie_detail.dart';
 import '../model/movie.dart';
 import 'profile_page.dart';
+import 'dart:math';
+
 
 enum SortOption { title, releaseDate, voteAverage }
 
@@ -53,6 +55,7 @@ class MovieList extends StatefulWidget {
 }
 
 
+
 class _MovieListState extends State<MovieList> {
   late APIRunner helper;
   int moviesCount = 0;
@@ -68,7 +71,26 @@ class _MovieListState extends State<MovieList> {
 
   Icon visibleIcon = Icon(Icons.search);
   Widget searchBar = Text('Movies');
+  // Random Movie Stuff
+  void _showRandomMovie() {
+  if (movies.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('No movies available to choose from.')),
+    );
+    return;
+  }
 
+  final random = Random();
+  final index = random.nextInt(movies.length);
+  final selectedMovie = movies[index];
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => MovieDetail(selectedMovie)),
+  );
+}
+
+  // End Random Movie Stuff
   @override
   void initState() {
     super.initState(); // call super first
@@ -157,7 +179,7 @@ class _MovieListState extends State<MovieList> {
               ),
             ]),
           ),
-
+            
           // Movie list
           Expanded(
             child: ListView.builder(
@@ -186,7 +208,11 @@ class _MovieListState extends State<MovieList> {
               },
             ),
           ),
-          
+          ElevatedButton.icon(
+              onPressed: _showRandomMovie,
+              icon: const Icon(Icons.shuffle),
+              label: const Text('Surprise Me!'),
+            ),
         ],
       ),
     );
