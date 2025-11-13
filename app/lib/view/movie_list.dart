@@ -5,6 +5,8 @@ import '../model/movie.dart';
 import 'profile_page.dart';
 import 'dart:math';
 import 'dart:async';
+import 'package:flutter/gestures.dart';
+
 
 
 enum SortOption { title, releaseDate, voteAverage }
@@ -56,11 +58,110 @@ class MovieList extends StatefulWidget {
   });
 }
 
+class InfiniteHorizontalScroll extends StatefulWidget {
+  final List<Movie> movies;
+  final String defaultImage;
 
+  const InfiniteHorizontalScroll({
+    Key? key,
+    required this.movies,
+    required this.defaultImage,
+  }) : super(key: key);
+
+  @override
+  _InfiniteHorizontalScrollState createState() => _InfiniteHorizontalScrollState();
+}
+
+class _InfiniteHorizontalScrollState extends State<InfiniteHorizontalScroll> {
+  late final ScrollController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ScrollController();
+
+    // Infinite scroll logic: jump to start when nearing end
+    _controller.addListener(() {
+      if (_controller.position.pixels >= _controller.position.maxScrollExtent - 300) {
+        _controller.jumpTo(_controller.position.minScrollExtent + 1);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final movies = widget.movies;
+    if (movies.isEmpty) {
+      return const Center(child: Text('No movies available'));
+    }
+
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        dragDevices: {
+          PointerDeviceKind.touch,
+          PointerDeviceKind.mouse, // enables mouse drag
+        },
+      ),
+      child: SizedBox(
+        height: 240, // adjust overall height
+        child: ListView.builder(
+          controller: _controller,
+          scrollDirection: Axis.horizontal,
+          itemCount: movies.length * 1000, // "infinite" repetition
+          itemBuilder: (context, index) {
+            final movie = movies[index % movies.length];
+            final imageUrl = movie.posterPath.isNotEmpty
+                ? 'https://image.tmdb.org/t/p/w300${movie.posterPath}'
+                : widget.defaultImage;
+
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => MovieDetail(movie)),
+                );
+              },
+              child: Container(
+                width: 150,
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    imageUrl,
+                    height: 220,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
 
 class _MovieListState extends State<MovieList> {
   late APIRunner helper;
   int moviesCount = 0;
+  Movie? movieOfTheDay;
+  List<Movie> suggestedMovies = [];
   List<Movie> movies = [];
   List<Movie> ogMovies = [];
   TextEditingController _searchController = TextEditingController();
@@ -163,10 +264,9 @@ class _MovieListState extends State<MovieList> {
           },
         ),
       ]),
-      body: Column(
+      body: ListView(
         children: [
-          // Sorting controls
-          // NEW: Light/Dark mode toggle
+          //  Dark Mode toggle
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: SwitchListTile(
@@ -175,6 +275,8 @@ class _MovieListState extends State<MovieList> {
               onChanged: widget.onThemeChanged,
             ),
           ),
+
+          //  Sorting controls
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -207,40 +309,141 @@ class _MovieListState extends State<MovieList> {
               ),
             ]),
           ),
-            
-          // Movie list
-          Expanded(
-            child: ListView.builder(
-              itemCount: moviesCount,
-              itemBuilder: (BuildContext context, int position) {
-                final movie = movies[position];
-                final image = (movie.posterPath.isNotEmpty)
-                    ? NetworkImage(iconBase + movie.posterPath)
-                    : NetworkImage(defaultImage);
 
-                return Card(
-                  color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.black
-                    : Colors.white,
-                  elevation: 2.0,
-                  child: ListTile(
-                    onTap: () {
-                      MaterialPageRoute route = MaterialPageRoute(builder: (_) => MovieDetail(movie));
-                      Navigator.push(context, route);
-                    },
-                    leading: CircleAvatar(backgroundImage: image),
-                    title: Text(movie.title),
-                    subtitle: Text('Released: ${movie.releaseDate} - Vote: ${movie.voteAverage}'),
-                  ),
-                );
-              },
+          //  Movie of the Day Banner
+          if (movies.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => MovieDetail(movies.first)),
+                  );
+                },
+                child: Stack(
+                  alignment: Alignment.bottomLeft,
+                  children: [
+                    // Background image with fade
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: AnimatedOpacity(
+                        opacity: 1.0,
+                        duration: const Duration(seconds: 1),
+                        child: Image.network(
+                          'https://image.tmdb.org/t/p/w500${movies.first.posterPath}',
+                          height: 280,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+
+                    // Dark overlay for readability
+                    Container(
+                      height: 220,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                          Colors.black.withOpacity(0.7),
+                          Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Text on top
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            " Movie of the Day",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            movies.first.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          ElevatedButton.icon(
+
+            //  Suggested Movies (Infinite Horizontal Scroll)
+            if (movies.isNotEmpty) Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      " Suggested Movies",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  InfiniteHorizontalScroll(
+                    movies: movies,
+                    defaultImage: defaultImage,
+                  ),
+                ],
+              ),
+            ),
+
+          // 🎞 Full movie list
+          ...movies.map((movie) {
+            final image = (movie.posterPath.isNotEmpty)
+              ? NetworkImage(iconBase + movie.posterPath)
+              : NetworkImage(defaultImage);
+
+            return Card(
+              color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.black
+                : Colors.white,
+              elevation: 2.0,
+              child: ListTile(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => MovieDetail(movie)),
+                  );
+                },
+                leading: CircleAvatar(backgroundImage: image),
+                title: Text(movie.title),
+                subtitle: Text(
+                  'Released: ${movie.releaseDate} - Vote: ${movie.voteAverage}',
+                ),
+              ),
+            );
+          }).toList(),
+
+          //  Surprise Me button
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton.icon(
               onPressed: _showRandomMovie,
               icon: const Icon(Icons.shuffle),
               label: const Text('Surprise Me!'),
             ),
+          ),
         ],
       ),
     );
@@ -306,11 +509,25 @@ class _MovieListState extends State<MovieList> {
 
       final sortedResult = sortMovies(results, _selectedOption, ascending: _ascending);
       setState(() {
-        movies = sortedResult;
-        ogMovies = List<Movie>.from(sortedResult);
-        moviesCount = movies.length;
-        searchBar = Text(_mode == ContentMode.movies ? 'Movies' : 'TV Shows');
-      });
+       movies = sortedResult;
+       ogMovies = List<Movie>.from(sortedResult);
+       moviesCount = movies.length;
+       searchBar = Text(_mode == ContentMode.movies ? 'Movies' : 'TV Shows');
+
+      // Pick a random "Movie of the Day"
+      if (movies.isNotEmpty) {
+       final random = Random();
+       movieOfTheDay = movies[random.nextInt(movies.length)];
+      }
+
+      // Suggested Movies = top 5 by rating (or random if fewer)
+      suggestedMovies = List<Movie>.from(movies);
+      suggestedMovies.sort((a, b) => b.voteAverage.compareTo(a.voteAverage));
+      if (suggestedMovies.length > 5) {
+       suggestedMovies = suggestedMovies.take(5).toList();
+      }
+    });
+
     } catch (e, st) {
       debugPrint('[initialize] error: $e\n$st');
       setState(() {
