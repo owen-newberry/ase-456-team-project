@@ -178,6 +178,7 @@ class _MovieListState extends State<MovieList> {
   int moviesCount = 0;
   Movie? movieOfTheDay;
   List<Movie> suggestedMovies = [];
+  List<Movie> romanceMovies = [];
   List<Movie> movies = [];
   List<Movie> ogMovies = [];
   TextEditingController _searchController = TextEditingController();
@@ -261,7 +262,15 @@ class _MovieListState extends State<MovieList> {
               initialize();
             },
           ),
-
+          IconButton(
+            icon: Icon(
+              widget.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+            ),
+            tooltip: widget.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+            onPressed: () {
+              widget.onThemeChanged(!widget.isDarkMode);
+            },
+          ),
           // Profile
           IconButton(
             icon: const Icon(Icons.account_circle),
@@ -279,20 +288,157 @@ class _MovieListState extends State<MovieList> {
     );
   }
 
+  Widget _buildSplitHeroSlideshow(List<Movie> movies) {
+    return SizedBox(
+      height: 380, // taller to fit bigger poster
+      child: PageView.builder(
+        itemCount: movies.length,
+        controller: PageController(viewportFraction: 0.9),
+        itemBuilder: (context, index) {
+          final movie = movies[index];
+          final imageUrl = movie.posterPath.isNotEmpty
+              ? 'https://image.tmdb.org/t/p/w500${movie.posterPath}'
+              : defaultImage;
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Stack(
+                children: [
+                  // Background card
+                  Container(
+                    color: Colors.grey[900],
+                    child: Row(
+                      children: [
+                        // Movie Poster
+                        ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            bottomLeft: Radius.circular(16),
+                          ),
+                          child: Image.network(
+                            imageUrl,
+                            width: 260, // increased from 160
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+
+                        // Right side info
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Movie title
+                                Text(
+                                  movie.title,
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 6),
+
+                                // Rating + release date
+                                Row(
+                                  children: [
+                                    Icon(Icons.star, color: Colors.yellow[700], size: 20),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${movie.voteAverage}',
+                                      style: const TextStyle(color: Colors.white),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Text(
+                                      movie.releaseDate,
+                                      style: TextStyle(color: Colors.grey[300]),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+
+                                // Overview
+                                if (movie.overview.isNotEmpty)
+                                  Text(
+                                    movie.overview,
+                                    maxLines: 4,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: Colors.grey[300],
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                const SizedBox(height: 12),
+
+                                // Action buttons
+                                Row(
+                                  children: [
+                                    ElevatedButton.icon(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (_) => MovieDetail(movie)),
+                                        );
+                                      },
+                                      icon: const Icon(Icons.play_arrow),
+                                      label: const Text('Watch'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 18, vertical: 8),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Gradient overlay on poster for readability
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 180,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Colors.black.withOpacity(0.5),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   // === Normal mode content ===
   Widget _buildNormalContent() {
     return ListView(
       children: [
-        // Dark mode toggle
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: SwitchListTile(
-            title: const Text('Dark Mode'),
-            value: widget.isDarkMode,
-            onChanged: widget.onThemeChanged,
-          ),
-        ),
-
         // Sorting controls
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -327,72 +473,8 @@ class _MovieListState extends State<MovieList> {
           ]),
         ),
 
-        // Movie of the Day Banner
-        if (movies.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => MovieDetail(movies.first)),
-                );
-              },
-              child: Stack(
-                alignment: Alignment.bottomLeft,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      'https://image.tmdb.org/t/p/w500${movies.first.posterPath}',
-                      height: 280,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Container(
-                    height: 220,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Colors.black.withOpacity(0.7),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _mode == ContentMode.movies
-                              ? 'Movie of the Day'
-                              : 'TV Show of the Day',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          movies.first.title,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+        // Hero Row
+        if (movies.isNotEmpty) _buildSplitHeroSlideshow(movies),
 
         // Suggested Movies horizontal scroll
         if (movies.isNotEmpty)
@@ -411,6 +493,62 @@ class _MovieListState extends State<MovieList> {
                 const SizedBox(height: 8),
                 InfiniteHorizontalScroll(
                   movies: movies,
+                  defaultImage: defaultImage,
+                ),
+              ],
+            ),
+          ),
+
+        // Romance Movies horizontal scroll - NEW SECTION
+        if (romanceMovies.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.favorite, color: Colors.pink, size: 22),
+                      const SizedBox(width: 8),
+                      const Text(
+                        "Romance Movies",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                InfiniteHorizontalScroll(
+                  movies: romanceMovies,
+                  defaultImage: defaultImage,
+                ),
+              ],
+            ),
+          ),
+        
+        // Top Rated Movies horizontal scroll
+        if (movies.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    "Top Rated Movies",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                InfiniteHorizontalScroll(
+                  movies: (List<Movie>.from(movies)
+                        ..sort((a, b) => b.voteAverage.compareTo(a.voteAverage)))
+                      .take(10)
+                      .toList(),
                   defaultImage: defaultImage,
                 ),
               ],
@@ -542,6 +680,49 @@ class _MovieListState extends State<MovieList> {
     },
   );
 }
+  List<Movie> rankAndSortMovies(
+    List<Movie> movies, String query, SortOption option, bool ascending) {
+      final lowerQuery = query.toLowerCase().trim();
+
+      // Assign a match score to each movie
+      final scoredMovies = movies.map((m) {
+        final title = m.title.toLowerCase().trim();
+        int score;
+        if (title == lowerQuery) score = 0;       // perfect match
+        else if (title.contains(lowerQuery)) score = 1; // partial match
+        else score = 2;                           // no match
+        return {'movie': m, 'score': score};
+      }).toList();
+
+      // Sort by score first, then by the chosen SortOption
+      scoredMovies.sort((a, b) {
+        final scoreA = a['score'] as int;
+        final scoreB = b['score'] as int;
+        if (scoreA != scoreB) return scoreA.compareTo(scoreB);
+
+        final movieA = a['movie'] as Movie;
+        final movieB = b['movie'] as Movie;
+
+        int optionResult;
+        switch (option) {
+          case SortOption.title:
+            optionResult = movieA.title.compareTo(movieB.title);
+            break;
+          case SortOption.releaseDate:
+            final aDate = DateTime.tryParse(movieA.releaseDate) ?? DateTime.fromMillisecondsSinceEpoch(0);
+            final bDate = DateTime.tryParse(movieB.releaseDate) ?? DateTime.fromMillisecondsSinceEpoch(0);
+            optionResult = aDate.compareTo(bDate);
+            break;
+          case SortOption.voteAverage:
+            optionResult = movieA.voteAverage.compareTo(movieB.voteAverage);
+            break;
+        }
+
+        return ascending ? optionResult : -optionResult;
+      });
+
+      return scoredMovies.map((e) => e['movie'] as Movie).toList();
+    }
 
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
@@ -553,13 +734,16 @@ class _MovieListState extends State<MovieList> {
         });
         return;
       }
+
       try {
         final raw = _mode == ContentMode.movies
             ? await helper.searchMovie(query)
             : await helper.searchTVShow(query);
+
         final results = _toMovieList(raw);
-        final sortedResults =
-            sortMovies(results, _selectedOption, ascending: _ascending);
+
+        // Use the new ranking + sorting function
+        final sortedResults = rankAndSortMovies(results, query, _selectedOption, _ascending);
 
         setState(() {
           movies = sortedResults;
@@ -603,11 +787,23 @@ class _MovieListState extends State<MovieList> {
       final sortedResults =
           sortMovies(results, _selectedOption, ascending: _ascending);
 
+      // NEW: Fetch romance movies only in movies mode
+      List<Movie> fetchedRomanceMovies = [];
+      if (_mode == ContentMode.movies) {
+        try {
+          final romanceRaw = await helper.getRomanceMovies();
+          fetchedRomanceMovies = _toMovieList(romanceRaw);
+        } catch (e) {
+          debugPrint('[initialize] error fetching romance movies: $e');
+        }
+      }
+
       setState(() {
         movies = sortedResults;
         ogMovies = List<Movie>.from(sortedResults);
         moviesCount = movies.length;
-
+        romanceMovies = fetchedRomanceMovies;
+        
         if (movies.isNotEmpty) {
           final random = Random();
           movieOfTheDay = movies[random.nextInt(movies.length)];
