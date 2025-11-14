@@ -109,7 +109,7 @@ class _InfiniteHorizontalScrollState extends State<InfiniteHorizontalScroll> {
         },
       ),
       child: SizedBox(
-        height: 240, // adjust overall height
+        height: 300, // adjust overall height
         child: ListView.builder(
           controller: _controller,
           scrollDirection: Axis.horizontal,
@@ -132,21 +132,37 @@ class _InfiniteHorizontalScrollState extends State<InfiniteHorizontalScroll> {
                 margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 6,
-                      offset: const Offset(0, 4),
+                ),
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        imageUrl,
+                        height: 220,
+                        width: 150,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    SizedBox(
+                      width: 150,
+                      child: Text(
+                        movie.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.6,
+                          color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
+                        ),
+                      ),
                     ),
                   ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    imageUrl,
-                    height: 220,
-                    fit: BoxFit.cover,
-                  ),
                 ),
               ),
             );
@@ -166,6 +182,7 @@ class _MovieListState extends State<MovieList> {
   List<Movie> ogMovies = [];
   TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
+  bool _isSearching = false;
 
   // Sorting state
   SortOption _selectedOption = SortOption.title;
@@ -174,374 +191,362 @@ class _MovieListState extends State<MovieList> {
   // Toggle between Movies and Shows
   ContentMode _mode = ContentMode.movies;
 
-
-  final String iconBase = 'https://image.tmdb.org/t/p/w92/';
   final String defaultImage =
       'https://images.freeimages.com/images/large-previews/5eb/movie-clapboard-1184339.jpg';
 
   Icon visibleIcon = Icon(Icons.search);
   Widget searchBar = Text('Movies');
-  // Random Movie Stuff
-  void _showRandomMovie() {
-  if (movies.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No movies available to choose from.')),
-    );
-    return;
-  }
 
-  final random = Random();
-  final index = random.nextInt(movies.length);
-  final selectedMovie = movies[index];
-
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (_) => MovieDetail(selectedMovie)),
-  );
-}
-
-  // End Random Movie Stuff
   @override
   void initState() {
-    super.initState(); // call super first
+    super.initState();
     helper = APIRunner();
     initialize();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: searchBar, actions: <Widget>[
-        IconButton( // Search
-          icon: visibleIcon,
-          onPressed: () {
-            setState(() {
-              if (this.visibleIcon.icon == Icons.search) {
-                this.visibleIcon = Icon(Icons.cancel);
-                this.searchBar = TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20.0,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: _mode == ContentMode.movies ? 'Search Movies...' : 'Search TV Shows...',
-                    border: InputBorder.none,
-                  ),
-                  onChanged: (text) {
-                    _onSearchChanged(text);
-                  },
-                );
-              } else {
-                this.visibleIcon = Icon(Icons.search);
-                this.searchBar = Text(_mode == ContentMode.movies ? 'Movies' : 'TV Shows');
-                _searchController.clear();
-                movies = List<Movie>.from(ogMovies);
-                moviesCount = movies.length;
-              }
-            });
-          },
-        ), // Movie or TV Show Toggle
-        IconButton(
-          icon: Icon(_mode == ContentMode.movies ? Icons.movie : Icons.tv),
-          tooltip: _mode == ContentMode.movies ? 'Switch to TV Shows' : 'Switch to Movies',
-          onPressed: () {
-            setState(() {
-              _mode = _mode == ContentMode.movies ? ContentMode.tv : ContentMode.movies;
-              searchBar = Text(_mode == ContentMode.movies ? 'Movies' : 'TV Shows');
-            });
-            initialize();
-          },
-        ), // Profile Button
-        IconButton(
-          icon: const Icon(Icons.account_circle),
-          tooltip: 'Profile',
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => ProfilePage()),
-            );
-          },
-        ),
-      ]),
-      body: ListView(
-        children: [
-          //  Dark Mode toggle
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: SwitchListTile(
-              title: const Text('Dark Mode'),
-              value: widget.isDarkMode,
-              onChanged: widget.onThemeChanged,
-            ),
-          ),
-
-          //  Sorting controls
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              DropdownButton<SortOption>(
-                value: _selectedOption,
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() {
-                    _selectedOption = value;
-                    movies = sortMovies(movies, _selectedOption, ascending: _ascending);
-                  });
-                },
-                items: SortOption.values.map((option) {
-                  final label = option.toString().split('.').last;
-                  final display = label[0].toUpperCase() + label.substring(1);
-                  return DropdownMenuItem(
-                    value: option,
-                    child: Text(display),
-                  );
-                }).toList(),
-              ),
-              IconButton(
-                icon: Icon(_ascending ? Icons.arrow_upward : Icons.arrow_downward),
-                onPressed: () {
-                  setState(() {
-                    _ascending = !_ascending;
-                    movies = sortMovies(movies, _selectedOption, ascending: _ascending);
-                  });
-                },
-              ),
-            ]),
-          ),
-
-          //  Movie of the Day Banner
-          if (movies.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => MovieDetail(movies.first)),
-                  );
-                },
-                child: Stack(
-                  alignment: Alignment.bottomLeft,
-                  children: [
-                    // Background image with fade
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: AnimatedOpacity(
-                        opacity: 1.0,
-                        duration: const Duration(seconds: 1),
-                        child: Image.network(
-                          'https://image.tmdb.org/t/p/w500${movies.first.posterPath}',
-                          height: 280,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+      appBar: AppBar(
+        title: searchBar,
+        actions: [
+          // Search button
+          IconButton(
+            icon: visibleIcon,
+            onPressed: () {
+              setState(() {
+                if (visibleIcon.icon == Icons.search) {
+                  visibleIcon = Icon(Icons.cancel);
+                  searchBar = TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20.0,
                     ),
+                    decoration: InputDecoration(
+                      hintText: _mode == ContentMode.movies
+                          ? 'Search Movies...'
+                          : 'Search TV Shows...',
+                      border: InputBorder.none,
+                    ),
+                    onChanged: _onSearchChanged,
+                  );
+                  _isSearching = true;
+                } else {
+                  visibleIcon = Icon(Icons.search);
+                  searchBar =
+                      Text(_mode == ContentMode.movies ? 'Movies' : 'TV Shows');
+                  _searchController.clear();
+                  movies = List<Movie>.from(ogMovies);
+                  moviesCount = movies.length;
+                  _isSearching = false;
+                }
+              });
+            },
+          ),
 
-                    // Dark overlay for readability
-                    Container(
-                      height: 220,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
+          // Mode toggle (Movies/TV)
+          IconButton(
+            icon: Icon(_mode == ContentMode.movies ? Icons.movie : Icons.tv),
+            tooltip:
+                _mode == ContentMode.movies ? 'Switch to TV Shows' : 'Switch to Movies',
+            onPressed: () {
+              setState(() {
+                _mode =
+                    _mode == ContentMode.movies ? ContentMode.tv : ContentMode.movies;
+                searchBar =
+                    Text(_mode == ContentMode.movies ? 'Movies' : 'TV Shows');
+              });
+              initialize();
+            },
+          ),
+
+          // Profile
+          IconButton(
+            icon: const Icon(Icons.account_circle),
+            tooltip: 'Profile',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ProfilePage()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: _isSearching ? _buildSearchResults() : _buildNormalContent(),
+    );
+  }
+
+  // === Normal mode content ===
+  Widget _buildNormalContent() {
+    return ListView(
+      children: [
+        // Dark mode toggle
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: SwitchListTile(
+            title: const Text('Dark Mode'),
+            value: widget.isDarkMode,
+            onChanged: widget.onThemeChanged,
+          ),
+        ),
+
+        // Sorting controls
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            DropdownButton<SortOption>(
+              value: _selectedOption,
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() {
+                  _selectedOption = value;
+                  movies = sortMovies(movies, _selectedOption, ascending: _ascending);
+                });
+              },
+              items: SortOption.values.map((option) {
+                final label = option.toString().split('.').last;
+                final display = label[0].toUpperCase() + label.substring(1);
+                return DropdownMenuItem(
+                  value: option,
+                  child: Text(display),
+                );
+              }).toList(),
+            ),
+            IconButton(
+              icon: Icon(_ascending ? Icons.arrow_upward : Icons.arrow_downward),
+              onPressed: () {
+                setState(() {
+                  _ascending = !_ascending;
+                  movies = sortMovies(movies, _selectedOption, ascending: _ascending);
+                });
+              },
+            ),
+          ]),
+        ),
+
+        // Movie of the Day Banner
+        if (movies.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => MovieDetail(movies.first)),
+                );
+              },
+              child: Stack(
+                alignment: Alignment.bottomLeft,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      'https://image.tmdb.org/t/p/w500${movies.first.posterPath}',
+                      height: 280,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Container(
+                    height: 220,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
                           Colors.black.withOpacity(0.7),
                           Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Text on top
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            " Movie of the Day",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            movies.first.title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-
-            //  Suggested Movies (Infinite Horizontal Scroll)
-            if (movies.isNotEmpty) Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      " Suggested Movies",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
                   ),
-                  const SizedBox(height: 8),
-                  InfiniteHorizontalScroll(
-                    movies: movies,
-                    defaultImage: defaultImage,
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _mode == ContentMode.movies
+                              ? 'Movie of the Day'
+                              : 'TV Show of the Day',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          movies.first.title,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
+          ),
 
-          // 🎞 Full movie list
-          ...movies.map((movie) {
-            final image = (movie.posterPath.isNotEmpty)
-              ? NetworkImage(iconBase + movie.posterPath)
-              : NetworkImage(defaultImage);
-
-            return Card(
-              color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.black
-                : Colors.white,
-              elevation: 2.0,
-              child: ListTile(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => MovieDetail(movie)),
-                  );
-                },
-                leading: CircleAvatar(backgroundImage: image),
-                title: Text(movie.title),
-                subtitle: Text(
-                  'Released: ${movie.releaseDate} - Vote: ${movie.voteAverage}',
-                ),
-              ),
-            );
-          }).toList(),
-
-          //  Surprise Me button
+        // Suggested Movies horizontal scroll
+        if (movies.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton.icon(
-              onPressed: _showRandomMovie,
-              icon: const Icon(Icons.shuffle),
-              label: const Text('Surprise Me!'),
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    "Suggested Movies",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                InfiniteHorizontalScroll(
+                  movies: movies,
+                  defaultImage: defaultImage,
+                ),
+              ],
             ),
           ),
-        ],
+
+        // Surprise Me button
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ElevatedButton.icon(
+            onPressed: _showRandomMovie,
+            icon: const Icon(Icons.shuffle),
+            label: const Text('Surprise Me!'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // === Search mode content ===
+  Widget _buildSearchResults() {
+  if (movies.isEmpty) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text(
+          'No results found.',
+          style: TextStyle(fontSize: 18),
+        ),
       ),
     );
   }
 
-  // Helper that turns whatever the API returns into List<Movie>
-  List<Movie> _toMovieList(dynamic raw) {
-    try {
-      if (raw == null) return [];
-      if (raw is List<Movie>) return raw;
-      if (raw is List) {
-        return raw.map<Movie>((e) {
-          if (e is Movie) return e;
-          if (e is Map) {
-            // ensure types are Map<String, dynamic>
-            return Movie.fromJson(Map<String, dynamic>.from(e as Map));
-          }
-          // fallback: try to cast then fail-safe
-          throw FormatException('Unknown element type in result list: ${e.runtimeType}');
-        }).toList();
-      }
-      // single-object responses (unlikely)
-      if (raw is Map) {
-        return [Movie.fromJson(Map<String, dynamic>.from(raw))];
-      }
-      return [];
-    } catch (e, st) {
-      debugPrint('[_toMovieList] parse error: $e\n$st');
-      return [];
-    }
-  }
+  return ListView.builder(
+    itemCount: movies.length,
+    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+    itemBuilder: (context, index) {
+      final movie = movies[index];
+      final imageUrl = movie.posterPath.isNotEmpty
+          ? 'https://image.tmdb.org/t/p/w300${movie.posterPath}'
+          : defaultImage;
 
-  Future<void> search(String text) async {
-    try {
-      debugPrint('[search] querying for: "$text"');
-      final raw = await helper.searchMovie(text); // expect List or List<Map>
-      debugPrint('[search] raw result type: ${raw.runtimeType}');
-      final results = _toMovieList(raw);
-      debugPrint('[search] parsed ${results.length} movies');
-      final sortedResult = sortMovies(results, _selectedOption, ascending: _ascending);
-      setState(() {
-        movies = sortedResult;
-        moviesCount = movies.length;
-      });
-    } catch (e, st) {
-      debugPrint('[search] error: $e\n$st');
-      setState(() {
-        movies = [];
-        moviesCount = 0;
-      });
-    }
-  }
-
-  Future<void> initialize() async {
-    debugPrint('[initialize] mode: ${_mode}');
-    try {
-      debugPrint('[initialize] fetching ${_mode == ContentMode.movies ? 'movies' : 'TV Shows'}');
-      
-      final raw = _mode == ContentMode.movies ? await helper.getUpcomingMovies() : await helper.getPopularShows();
-
-      final results = _toMovieList(raw);
-      debugPrint('[initialize] parsed ${results.length} items');
-
-      final sortedResult = sortMovies(results, _selectedOption, ascending: _ascending);
-      setState(() {
-       movies = sortedResult;
-       ogMovies = List<Movie>.from(sortedResult);
-       moviesCount = movies.length;
-       searchBar = Text(_mode == ContentMode.movies ? 'Movies' : 'TV Shows');
-
-      // Pick a random "Movie of the Day"
-      if (movies.isNotEmpty) {
-       final random = Random();
-       movieOfTheDay = movies[random.nextInt(movies.length)];
-      }
-
-      // Suggested Movies = top 5 by rating (or random if fewer)
-      suggestedMovies = List<Movie>.from(movies);
-      suggestedMovies.sort((a, b) => b.voteAverage.compareTo(a.voteAverage));
-      if (suggestedMovies.length > 5) {
-       suggestedMovies = suggestedMovies.take(5).toList();
-      }
-    });
-
-    } catch (e, st) {
-      debugPrint('[initialize] error: $e\n$st');
-      setState(() {
-        movies = [];
-        moviesCount = 0;
-      });
-    }
-  }
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => MovieDetail(movie)),
+          );
+        },
+        child: Card(
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 4,
+          child: Container(
+            height: 180,
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                // Poster with shadow
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 6,
+                        offset: Offset(2, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      imageUrl,
+                      width: 120,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Movie info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        movie.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.star, color: Colors.yellow[700], size: 20),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${movie.voteAverage}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            movie.releaseDate,
+                            style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      if (movie.overview.isNotEmpty)
+                        Text(
+                          movie.overview,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
 
   void _onSearchChanged(String query) {
-    if(_debounce?.isActive ?? false) _debounce!.cancel();
-
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
-      if(query.isEmpty) {
+      if (query.isEmpty) {
         setState(() {
           movies = List<Movie>.from(ogMovies);
           moviesCount = movies.length;
@@ -550,10 +555,11 @@ class _MovieListState extends State<MovieList> {
       }
       try {
         final raw = _mode == ContentMode.movies
-          ? await helper.searchMovie(query)
-          : await helper.searchTVShow(query);
+            ? await helper.searchMovie(query)
+            : await helper.searchTVShow(query);
         final results = _toMovieList(raw);
-        final sortedResults = sortMovies(results, _selectedOption, ascending: _ascending);
+        final sortedResults =
+            sortMovies(results, _selectedOption, ascending: _ascending);
 
         setState(() {
           movies = sortedResults;
@@ -569,24 +575,74 @@ class _MovieListState extends State<MovieList> {
     });
   }
 
+  List<Movie> _toMovieList(dynamic raw) {
+    try {
+      if (raw == null) return [];
+      if (raw is List<Movie>) return raw;
+      if (raw is List) {
+        return raw.map<Movie>((e) {
+          if (e is Movie) return e;
+          if (e is Map) return Movie.fromJson(Map<String, dynamic>.from(e));
+          throw FormatException('Unknown element type: ${e.runtimeType}');
+        }).toList();
+      }
+      if (raw is Map) return [Movie.fromJson(Map<String, dynamic>.from(raw))];
+      return [];
+    } catch (e, st) {
+      debugPrint('[_toMovieList] parse error: $e\n$st');
+      return [];
+    }
+  }
+
+  Future<void> initialize() async {
+    try {
+      final raw = _mode == ContentMode.movies
+          ? await helper.getUpcomingMovies()
+          : await helper.getPopularShows();
+      final results = _toMovieList(raw);
+      final sortedResults =
+          sortMovies(results, _selectedOption, ascending: _ascending);
+
+      setState(() {
+        movies = sortedResults;
+        ogMovies = List<Movie>.from(sortedResults);
+        moviesCount = movies.length;
+
+        if (movies.isNotEmpty) {
+          final random = Random();
+          movieOfTheDay = movies[random.nextInt(movies.length)];
+        }
+
+        // Suggested top 5 by rating
+        suggestedMovies = List<Movie>.from(movies);
+        suggestedMovies.sort((a, b) => b.voteAverage.compareTo(a.voteAverage));
+        if (suggestedMovies.length > 5) {
+          suggestedMovies = suggestedMovies.take(5).toList();
+        }
+      });
+    } catch (e, st) {
+      debugPrint('[initialize] error: $e\n$st');
+      setState(() {
+        movies = [];
+        moviesCount = 0;
+      });
+    }
+  }
+
+  void _showRandomMovie() {
+    if (movies.isEmpty) return;
+    final random = Random();
+    final selectedMovie = movies[random.nextInt(movies.length)];
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => MovieDetail(selectedMovie)),
+    );
+  }
+
   @override
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
-  }
-
-  // Optional: temporary test helper to verify UI works without the API
-  // Call this from a button or init for quick sanity check.
-  void loadSampleData() {
-    final sample = <Movie>[
-      Movie(id: 1, title: 'Sample A', voteAverage: 7.1, releaseDate: '2010-01-01', overview: '', posterPath: ''),
-      Movie(id: 2, title: 'Sample B', voteAverage: 8.3, releaseDate: '2015-05-05', overview: '', posterPath: ''),
-      Movie(id: 3, title: 'Another', voteAverage: 6.4, releaseDate: '2005-03-03', overview: '', posterPath: ''),
-    ];
-    setState(() {
-      movies = sortMovies(sample, _selectedOption, ascending: _ascending);
-      moviesCount = movies.length;
-    });
   }
 }
