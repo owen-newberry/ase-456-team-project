@@ -483,10 +483,10 @@ class _MovieListState extends State<MovieList> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.0),
                   child: Text(
-                    "Suggested Movies",
+                    _mode == ContentMode.movies ? 'Suggested Movies' : 'Suggested TV Shows',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -535,10 +535,10 @@ class _MovieListState extends State<MovieList> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.0),
                   child: Text(
-                    "Top Rated Movies",
+                    _mode == ContentMode.movies ? "Top Rated Movies" : "Top Rated TV Shows",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
