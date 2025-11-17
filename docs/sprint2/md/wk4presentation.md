@@ -12,7 +12,7 @@ paginate: true
 
 ## Week 2 Goals
 
-**Progress**: 8/9 (67%)
+**Progress**: 8/9 (89%)
 **Total LoC**: 700
 **Overall Total LoC**: 2250
 
