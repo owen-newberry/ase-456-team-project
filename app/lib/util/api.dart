@@ -14,6 +14,8 @@ class APIRunner {
   final String apiUpcoming = '/movie/upcoming?';
   final String apiSearch = '/search/movie?';
 
+  final String apiDiscover = '/discover/movie?';
+
   //TV Endpoints
   final String apiPopularTV = '/tv/popular?';
   final String apiAiringToday = '/tv/airing_today?';
@@ -41,6 +43,11 @@ class APIRunner {
   Future<List?> getUpcomingMovies() async {
     final String upcomingAPI = urlBase + apiUpcoming + api_key + urlLanguage;
     return runAPI(upcomingAPI);
+  }
+
+  Future<List<Movie>?> getRomanceMovies() async {
+    final String romanceAPI = urlBase + apiDiscover + api_key + urlLanguage + '&with_genres=10749&without_genres=16,878,14&sort_by=popularity.desc&vote_count.gte=2000';
+    return runAPI(romanceAPI);
   }
 
   Future<List?> searchMovie(String title) async {
