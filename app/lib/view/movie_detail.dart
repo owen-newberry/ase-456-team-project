@@ -17,7 +17,7 @@ class _MovieDetailState extends State<MovieDetail> {
 
   List<Review> reviews = [];
   bool loading = false;
-  String? movieStatus; // tracks current user's movie status
+  String? movieStatus;
   int _selectedRating = 0;
 
   @override
@@ -37,15 +37,15 @@ class _MovieDetailState extends State<MovieDetail> {
         .eq('movie', widget.movie.title);
 
     final data = response as List<dynamic>;
-    final _reviews = data.map((json) => Review.fromJson(json)).toList();
+    final fetchedReviews = data.map((json) => Review.fromJson(json)).toList();
 
     setState(() {
-      reviews = _reviews;
+      reviews = fetchedReviews;
       loading = false;
     });
   }
 
-  // Fetch current user's movie status
+  // Get current user's movie status
   Future<void> fetchStatus() async {
     final currentUser = Supabase.instance.client.auth.currentUser;
     if (currentUser == null) return;
@@ -64,32 +64,7 @@ class _MovieDetailState extends State<MovieDetail> {
     }
   }
 
-  // Update watched / want-to-watch status
-  Future<void> updateStatus(String status) async {
-    final currentUser = Supabase.instance.client.auth.currentUser;
-    if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please log in first")),
-      );
-      return;
-    }
-
-    await Supabase.instance.client.from('users_movies').upsert({
-      'user_id': currentUser.id,
-      'movie_title': widget.movie.title,
-      'status': status,
-    });
-
-    setState(() {
-      movieStatus = status;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Marked as $status")),
-    );
-  }
-
-  // Add a review using logged-in user
+  // Add a review
   Future<void> _addReview() async {
     final currentUser = Supabase.instance.client.auth.currentUser;
     if (currentUser == null) {
@@ -116,6 +91,7 @@ class _MovieDetailState extends State<MovieDetail> {
 
     if (response is List && response.isNotEmpty) {
       commentController.clear();
+      _selectedRating = 0;
       fetchReviews();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -124,144 +100,199 @@ class _MovieDetailState extends State<MovieDetail> {
     }
   }
 
+  // Update watched/want-to-watch status
+  Future<void> updateStatus(String status) async {
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please log in first")),
+      );
+      return;
+    }
+
+    await Supabase.instance.client.from('users_movies').upsert({
+      'user_id': currentUser.id,
+      'movie_title': widget.movie.title,
+      'status': status,
+    });
+
+    setState(() {
+      movieStatus = status;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Marked as $status")),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
-    String path = (widget.movie.posterPath != null)
-        ? imgPath + widget.movie.posterPath
-        : 'https://images.freeimages.com/images/large-previews/5eb/movie-clapboard-1184339.jpg';
+    String path = imgPath + widget.movie.posterPath;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.movie.title),
       ),
       body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Poster
-              Container(
-                padding: const EdgeInsets.all(16),
-                height: height / 1.5,
-                child: Image.network(path),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Poster
+            Container(
+              padding: const EdgeInsets.all(16),
+              height: height / 1.5,
+              child: Image.network(path),
+            ),
+
+            // Overview
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(widget.movie.overview),
+            ),
+
+            const Divider(height: 30),
+
+            // Watched buttons
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    icon: Icon(
+                      Icons.check_circle,
+                      color: movieStatus == 'watched'
+                          ? Colors.green
+                          : Colors.white,
+                    ),
+                    label: const Text("Watched"),
+                    onPressed: () => updateStatus('watched'),
+                  ),
+                  ElevatedButton.icon(
+                    icon: Icon(
+                      Icons.star,
+                      color: movieStatus == 'want_to_watch'
+                          ? Colors.amber
+                          : Colors.white,
+                    ),
+                    label: const Text("Want to Watch"),
+                    onPressed: () => updateStatus('want_to_watch'),
+                  ),
+                ],
               ),
+            ),
 
-              // Overview
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(widget.movie.overview),
+            const Divider(height: 30),
+
+            // Add Review
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Add a Review",
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  TextField(
+                    controller: commentController,
+                    decoration:
+                        const InputDecoration(labelText: "Your Review"),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // Rating stars
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (i) {
+                      int star = i + 1;
+                      return IconButton(
+                        icon: Icon(
+                          Icons.star,
+                          color: _selectedRating >= star
+                              ? Colors.amber
+                              : Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() => _selectedRating = star);
+                        },
+                      );
+                    }),
+                  ),
+
+                  ElevatedButton(
+                    onPressed: _addReview,
+                    child: const Text("Submit"),
+                  ),
+                ],
               ),
+            ),
 
-              const Divider(height: 30),
+            const Divider(height: 30),
 
-              // Watched / Want to Watch buttons
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton.icon(
-                      icon: Icon(
-                        Icons.check_circle,
-                        color: movieStatus == 'watched'
-                            ? Colors.green
-                            : Colors.white,
+            // Reviews header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: const Text(
+                "Reviews",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // Reviews List
+            loading
+                ? const Center(child: CircularProgressIndicator())
+                : reviews.isEmpty
+                    ? const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text("No reviews yet."),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: reviews.length,
+                        itemBuilder: (context, index) {
+                          final r = reviews[index];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            child: ListTile(
+                              title: Text(r.username ?? "Unknown User"),
+                              subtitle: Text(r.comment),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: List.generate(
+                                  r.rating ?? 0,
+                                  (i) => const Icon(Icons.star,
+                                      color: Colors.amber),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                      label: const Text("Watched"),
-                      onPressed: () => updateStatus('watched'),
-                    ),
-                    ElevatedButton.icon(
-                      icon: Icon(
-                        Icons.star,
-                        color: movieStatus == 'want_to_watch'
-                            ? Colors.amber
-                            : Colors.white,
-                      ),
-                      label: const Text("Want to Watch"),
-                      onPressed: () => updateStatus('want_to_watch'),
-                    ),
-                  ],
-                ),
-              ),
 
-              const Divider(height: 30),
+            const SizedBox(height: 30),
 
-              // Review Form
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Add a Review!",
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    TextField(
-                      controller: commentController,
-                      decoration:
-                          const InputDecoration(labelText: "Your Review"),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(5, (index) {
-                        int starIndex = index + 1;
-                        return IconButton(
-                          icon: Icon(
-                            Icons.star,
-                            color: _selectedRating >= starIndex
-                                ? Colors.amber
-                                : Colors.grey,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _selectedRating = starIndex;
-                            });
-                          },
-                        );
-                      }),
-                    ),
-                    ElevatedButton(
-                      onPressed: _addReview,
-                      child: const Text("Submit"),
-                    ),
-                  ],
-                ),
+            // Play Button section (unchanged)
+            Center(
+              child: IconButton(
+                icon: const Icon(Icons.play_circle),
+                color: Colors.red,
+                iconSize: 100.0,
+                onPressed: () {},
               ),
+            ),
 
-              const Divider(height: 30),
-
-              // Reviews List
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: const Text(
-                  "Reviews",
-                  style: TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.only(left: 16, right: 16),
-                child: Text(widget.movie.overview),
-              ),
-              //
-              Container(
-                padding: EdgeInsets.all(16),
-                child: 
-                  IconButton(
-                    icon: const Icon(Icons.play_circle),
-                    color: Colors.red,
-                    iconSize: 100.0, 
-                    onPressed: () {},
-                ),
-              )
-            ],
-          ),
+            const SizedBox(height: 30),
+          ],
         ),
       ),
     );
   }
 }
-
