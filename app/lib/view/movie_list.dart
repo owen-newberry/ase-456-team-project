@@ -7,8 +7,6 @@ import 'dart:math';
 import 'dart:async';
 import 'package:flutter/gestures.dart';
 
-
-
 enum SortOption { title, releaseDate, voteAverage }
 enum ContentMode { movies, tv }
 
@@ -43,15 +41,16 @@ class ModeSwitch extends StatefulWidget {
 class _ModeSwitchState extends State<ModeSwitch> {
   @override
   Widget build(BuildContext context) {
-    return Container(); // Replace with your widget UI
+    return Container();
   }
 }
+
 class MovieList extends StatefulWidget {
   @override
-    _MovieListState createState() => _MovieListState();
-  final bool isDarkMode; // NEW
-  final ValueChanged<bool> onThemeChanged; // NEW
-  MovieList({ // UPDATED
+  _MovieListState createState() => _MovieListState();
+  final bool isDarkMode;
+  final ValueChanged<bool> onThemeChanged;
+  MovieList({
     super.key,
     required this.isDarkMode,
     required this.onThemeChanged,
@@ -80,7 +79,6 @@ class _InfiniteHorizontalScrollState extends State<InfiniteHorizontalScroll> {
     super.initState();
     _controller = ScrollController();
 
-    // Infinite scroll logic: jump to start when nearing end
     _controller.addListener(() {
       if (_controller.position.pixels >= _controller.position.maxScrollExtent - 300) {
         _controller.jumpTo(_controller.position.minScrollExtent + 1);
@@ -105,15 +103,15 @@ class _InfiniteHorizontalScrollState extends State<InfiniteHorizontalScroll> {
       behavior: ScrollConfiguration.of(context).copyWith(
         dragDevices: {
           PointerDeviceKind.touch,
-          PointerDeviceKind.mouse, // enables mouse drag
+          PointerDeviceKind.mouse,
         },
       ),
       child: SizedBox(
-        height: 300, // adjust overall height
+        height: 300,
         child: ListView.builder(
           controller: _controller,
           scrollDirection: Axis.horizontal,
-          itemCount: movies.length * 1000, // "infinite" repetition
+          itemCount: movies.length * 1000,
           itemBuilder: (context, index) {
             final movie = movies[index % movies.length];
             final imageUrl = movie.posterPath.isNotEmpty
@@ -157,8 +155,8 @@ class _InfiniteHorizontalScrollState extends State<InfiniteHorizontalScroll> {
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.6,
                           color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black,
+                              ? Colors.white
+                              : Colors.black,
                         ),
                       ),
                     ),
@@ -178,18 +176,23 @@ class _MovieListState extends State<MovieList> {
   int moviesCount = 0;
   Movie? movieOfTheDay;
   List<Movie> suggestedMovies = [];
+  
+  // Genre lists
   List<Movie> romanceMovies = [];
+  List<Movie> actionMovies = [];
+  List<Movie> comedyMovies = [];
+  List<Movie> horrorMovies = [];
+  List<Movie> dramaMovies = [];
+  List<Movie> animationMovies = [];
+  
   List<Movie> movies = [];
   List<Movie> ogMovies = [];
   TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
   bool _isSearching = false;
 
-  // Sorting state
   SortOption _selectedOption = SortOption.title;
   bool _ascending = true;
-
-  // Toggle between Movies and Shows
   ContentMode _mode = ContentMode.movies;
 
   final String defaultImage =
@@ -211,7 +214,6 @@ class _MovieListState extends State<MovieList> {
       appBar: AppBar(
         title: searchBar,
         actions: [
-          // Search button
           IconButton(
             icon: visibleIcon,
             onPressed: () {
@@ -222,13 +224,20 @@ class _MovieListState extends State<MovieList> {
                     controller: _searchController,
                     autofocus: true,
                     style: TextStyle(
-                      color: Colors.black,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
                       fontSize: 20.0,
                     ),
                     decoration: InputDecoration(
                       hintText: _mode == ContentMode.movies
                           ? 'Search Movies...'
                           : 'Search TV Shows...',
+                      hintStyle: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[400]
+                            : Colors.grey[600],
+                      ),
                       border: InputBorder.none,
                     ),
                     onChanged: _onSearchChanged,
@@ -246,8 +255,6 @@ class _MovieListState extends State<MovieList> {
               });
             },
           ),
-
-          // Mode toggle (Movies/TV)
           IconButton(
             icon: Icon(_mode == ContentMode.movies ? Icons.movie : Icons.tv),
             tooltip:
@@ -271,7 +278,6 @@ class _MovieListState extends State<MovieList> {
               widget.onThemeChanged(!widget.isDarkMode);
             },
           ),
-          // Profile
           IconButton(
             icon: const Icon(Icons.account_circle),
             tooltip: 'Profile',
@@ -290,7 +296,7 @@ class _MovieListState extends State<MovieList> {
 
   Widget _buildSplitHeroSlideshow(List<Movie> movies) {
     return SizedBox(
-      height: 380, // taller to fit bigger poster
+      height: 380,
       child: PageView.builder(
         itemCount: movies.length,
         controller: PageController(viewportFraction: 0.9),
@@ -306,12 +312,10 @@ class _MovieListState extends State<MovieList> {
               borderRadius: BorderRadius.circular(16),
               child: Stack(
                 children: [
-                  // Background card
                   Container(
                     color: Colors.grey[900],
                     child: Row(
                       children: [
-                        // Movie Poster
                         ClipRRect(
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(16),
@@ -319,13 +323,11 @@ class _MovieListState extends State<MovieList> {
                           ),
                           child: Image.network(
                             imageUrl,
-                            width: 260, // increased from 160
+                            width: 260,
                             height: double.infinity,
                             fit: BoxFit.cover,
                           ),
                         ),
-
-                        // Right side info
                         Expanded(
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -334,7 +336,6 @@ class _MovieListState extends State<MovieList> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Movie title
                                 Text(
                                   movie.title,
                                   style: const TextStyle(
@@ -346,8 +347,6 @@ class _MovieListState extends State<MovieList> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 6),
-
-                                // Rating + release date
                                 Row(
                                   children: [
                                     Icon(Icons.star, color: Colors.yellow[700], size: 20),
@@ -364,8 +363,6 @@ class _MovieListState extends State<MovieList> {
                                   ],
                                 ),
                                 const SizedBox(height: 10),
-
-                                // Overview
                                 if (movie.overview.isNotEmpty)
                                   Text(
                                     movie.overview,
@@ -377,8 +374,6 @@ class _MovieListState extends State<MovieList> {
                                     ),
                                   ),
                                 const SizedBox(height: 12),
-
-                                // Action buttons
                                 Row(
                                   children: [
                                     ElevatedButton.icon(
@@ -406,8 +401,6 @@ class _MovieListState extends State<MovieList> {
                       ],
                     ),
                   ),
-
-                  // Gradient overlay on poster for readability
                   Positioned(
                     left: 0,
                     top: 0,
@@ -435,7 +428,38 @@ class _MovieListState extends State<MovieList> {
     );
   }
 
-  // === Normal mode content ===
+  // Helper method to build genre sections
+  Widget _buildGenreSection(String title, List<Movie> movies, IconData icon, Color iconColor) {
+    if (movies.isEmpty) return const SizedBox.shrink();
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                Icon(icon, color: iconColor, size: 22),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          InfiniteHorizontalScroll(
+            movies: movies,
+            defaultImage: defaultImage,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildNormalContent() {
     return ListView(
       children: [
@@ -473,86 +497,76 @@ class _MovieListState extends State<MovieList> {
           ]),
         ),
 
-        // Hero Row
+        // Hero slideshow
         if (movies.isNotEmpty) _buildSplitHeroSlideshow(movies),
 
-        // Suggested Movies horizontal scroll
+        // Suggested content
         if (movies.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    _mode == ContentMode.movies ? 'Suggested Movies' : 'Suggested TV Shows',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                InfiniteHorizontalScroll(
-                  movies: movies,
-                  defaultImage: defaultImage,
-                ),
-              ],
-            ),
+          _buildGenreSection(
+            _mode == ContentMode.movies ? 'Suggested Movies' : 'Suggested TV Shows',
+            movies,
+            Icons.recommend,
+            Colors.blue,
           ),
 
-        // Romance Movies horizontal scroll - NEW SECTION
-        if (romanceMovies.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      Icon(Icons.favorite, color: Colors.pink, size: 22),
-                      const SizedBox(width: 8),
-                      const Text(
-                        "Romance Movies",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                InfiniteHorizontalScroll(
-                  movies: romanceMovies,
-                  defaultImage: defaultImage,
-                ),
-              ],
-            ),
-          ),
-        
-        // Top Rated Movies horizontal scroll
-        if (movies.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    _mode == ContentMode.movies ? "Top Rated Movies" : "Top Rated TV Shows",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 8),
+        // Action
+        _buildGenreSection(
+          _mode == ContentMode.movies ? 'Action Movies' : 'Action & Adventure Shows',
+          actionMovies,
+          Icons.local_fire_department,
+          Colors.orange,
+        ),
 
-                InfiniteHorizontalScroll(
-                  movies: (List<Movie>.from(movies)
-                        ..sort((a, b) => b.voteAverage.compareTo(a.voteAverage)))
-                      .take(10)
-                      .toList(),
-                  defaultImage: defaultImage,
-                ),
-              ],
-            ),
+        // Comedy
+        _buildGenreSection(
+          _mode == ContentMode.movies ? 'Comedy Movies' : 'Comedy Shows',
+          comedyMovies,
+          Icons.theater_comedy,
+          Colors.yellow,
+        ),
+
+        // Romance
+        _buildGenreSection(
+          _mode == ContentMode.movies ? 'Romance Movies' : 'Romance Shows',
+          romanceMovies,
+          Icons.favorite,
+          Colors.pink,
+        ),
+
+        // Horror/Mystery
+        _buildGenreSection(
+          _mode == ContentMode.movies ? 'Horror Movies' : 'Mystery Shows',
+          horrorMovies,
+          Icons.psychology,
+          Colors.purple,
+        ),
+
+        // Drama
+        _buildGenreSection(
+          _mode == ContentMode.movies ? 'Drama Movies' : 'Drama Shows',
+          dramaMovies,
+          Icons.movie_filter,
+          Colors.teal,
+        ),
+
+        // Animation
+        _buildGenreSection(
+          _mode == ContentMode.movies ? 'Animation Movies' : 'Animation Shows',
+          animationMovies,
+          Icons.animation,
+          Colors.green,
+        ),
+
+        // Top Rated
+        if (movies.isNotEmpty)
+          _buildGenreSection(
+            _mode == ContentMode.movies ? "Top Rated Movies" : "Top Rated TV Shows",
+            (List<Movie>.from(movies)
+                  ..sort((a, b) => b.voteAverage.compareTo(a.voteAverage)))
+                .take(10)
+                .toList(),
+            Icons.star,
+            Colors.amber,
           ),
 
         // Surprise Me button
@@ -568,161 +582,162 @@ class _MovieListState extends State<MovieList> {
     );
   }
 
-  // === Search mode content ===
   Widget _buildSearchResults() {
-  if (movies.isEmpty) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Text(
-          'No results found.',
-          style: TextStyle(fontSize: 18),
-        ),
-      ),
-    );
-  }
-
-  return ListView.builder(
-    itemCount: movies.length,
-    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-    itemBuilder: (context, index) {
-      final movie = movies[index];
-      final imageUrl = movie.posterPath.isNotEmpty
-          ? 'https://image.tmdb.org/t/p/w300${movie.posterPath}'
-          : defaultImage;
-
-      return GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => MovieDetail(movie)),
-          );
-        },
-        child: Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 4,
-          child: Container(
-            height: 180,
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                // Poster with shadow
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 6,
-                        offset: Offset(2, 2),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      imageUrl,
-                      width: 120,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Movie info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        movie.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.star, color: Colors.yellow[700], size: 20),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${movie.voteAverage}',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(width: 16),
-                          Text(
-                            movie.releaseDate,
-                            style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      if (movie.overview.isNotEmpty)
-                        Text(
-                          movie.overview,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+    if (movies.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'No results found.',
+            style: TextStyle(fontSize: 18),
           ),
         ),
       );
-    },
-  );
-}
-  List<Movie> rankAndSortMovies(
-    List<Movie> movies, String query, SortOption option, bool ascending) {
-      final lowerQuery = query.toLowerCase().trim();
-
-      // Assign a match score to each movie
-      final scoredMovies = movies.map((m) {
-        final title = m.title.toLowerCase().trim();
-        int score;
-        if (title == lowerQuery) score = 0;       // perfect match
-        else if (title.contains(lowerQuery)) score = 1; // partial match
-        else score = 2;                           // no match
-        return {'movie': m, 'score': score};
-      }).toList();
-
-      // Sort by score first, then by the chosen SortOption
-      scoredMovies.sort((a, b) {
-        final scoreA = a['score'] as int;
-        final scoreB = b['score'] as int;
-        if (scoreA != scoreB) return scoreA.compareTo(scoreB);
-
-        final movieA = a['movie'] as Movie;
-        final movieB = b['movie'] as Movie;
-
-        int optionResult;
-        switch (option) {
-          case SortOption.title:
-            optionResult = movieA.title.compareTo(movieB.title);
-            break;
-          case SortOption.releaseDate:
-            final aDate = DateTime.tryParse(movieA.releaseDate) ?? DateTime.fromMillisecondsSinceEpoch(0);
-            final bDate = DateTime.tryParse(movieB.releaseDate) ?? DateTime.fromMillisecondsSinceEpoch(0);
-            optionResult = aDate.compareTo(bDate);
-            break;
-          case SortOption.voteAverage:
-            optionResult = movieA.voteAverage.compareTo(movieB.voteAverage);
-            break;
-        }
-
-        return ascending ? optionResult : -optionResult;
-      });
-
-      return scoredMovies.map((e) => e['movie'] as Movie).toList();
     }
+
+    return ListView.builder(
+      itemCount: movies.length,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      itemBuilder: (context, index) {
+        final movie = movies[index];
+        final imageUrl = movie.posterPath.isNotEmpty
+            ? 'https://image.tmdb.org/t/p/w300${movie.posterPath}'
+            : defaultImage;
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => MovieDetail(movie)),
+            );
+          },
+          child: Card(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 4,
+            child: Container(
+              height: 180,
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 6,
+                          offset: Offset(2, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        imageUrl,
+                        width: 120,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          movie.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.star, color: Colors.yellow[700], size: 20),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${movie.voteAverage}',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              movie.releaseDate,
+                              style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        if (movie.overview.isNotEmpty)
+                          Text(
+                            movie.overview,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  List<Movie> rankAndSortMovies(
+      List<Movie> movies, String query, SortOption option, bool ascending) {
+    final lowerQuery = query.toLowerCase().trim();
+
+    final scoredMovies = movies.map((m) {
+      final title = m.title.toLowerCase().trim();
+      int score;
+      if (title == lowerQuery)
+        score = 0;
+      else if (title.contains(lowerQuery))
+        score = 1;
+      else
+        score = 2;
+      return {'movie': m, 'score': score};
+    }).toList();
+
+    scoredMovies.sort((a, b) {
+      final scoreA = a['score'] as int;
+      final scoreB = b['score'] as int;
+      if (scoreA != scoreB) return scoreA.compareTo(scoreB);
+
+      final movieA = a['movie'] as Movie;
+      final movieB = b['movie'] as Movie;
+
+      int optionResult;
+      switch (option) {
+        case SortOption.title:
+          optionResult = movieA.title.compareTo(movieB.title);
+          break;
+        case SortOption.releaseDate:
+          final aDate = DateTime.tryParse(movieA.releaseDate) ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          final bDate = DateTime.tryParse(movieB.releaseDate) ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          optionResult = aDate.compareTo(bDate);
+          break;
+        case SortOption.voteAverage:
+          optionResult = movieA.voteAverage.compareTo(movieB.voteAverage);
+          break;
+      }
+
+      return ascending ? optionResult : -optionResult;
+    });
+
+    return scoredMovies.map((e) => e['movie'] as Movie).toList();
+  }
 
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
@@ -741,9 +756,8 @@ class _MovieListState extends State<MovieList> {
             : await helper.searchTVShow(query);
 
         final results = _toMovieList(raw);
-
-        // Use the new ranking + sorting function
-        final sortedResults = rankAndSortMovies(results, query, _selectedOption, _ascending);
+        final sortedResults =
+            rankAndSortMovies(results, query, _selectedOption, _ascending);
 
         setState(() {
           movies = sortedResults;
@@ -787,14 +801,77 @@ class _MovieListState extends State<MovieList> {
       final sortedResults =
           sortMovies(results, _selectedOption, ascending: _ascending);
 
-      // NEW: Fetch romance movies only in movies mode
-      List<Movie> fetchedRomanceMovies = [];
+      // Fetch all genre-specific content
+      List<Movie> fetchedAction = [];
+      List<Movie> fetchedComedy = [];
+      List<Movie> fetchedRomance = [];
+      List<Movie> fetchedHorror = [];
+      List<Movie> fetchedDrama = [];
+      List<Movie> fetchedAnimation = [];
+
       if (_mode == ContentMode.movies) {
+        // Fetch movie genres
         try {
-          final romanceRaw = await helper.getRomanceMovies();
-          fetchedRomanceMovies = _toMovieList(romanceRaw);
+          fetchedAction = _toMovieList(await helper.getActionMovies());
+        } catch (e) {
+          debugPrint('[initialize] error fetching action movies: $e');
+        }
+        try {
+          fetchedComedy = _toMovieList(await helper.getComedyMovies());
+        } catch (e) {
+          debugPrint('[initialize] error fetching comedy movies: $e');
+        }
+        try {
+          fetchedRomance = _toMovieList(await helper.getRomanceMovies());
         } catch (e) {
           debugPrint('[initialize] error fetching romance movies: $e');
+        }
+        try {
+          fetchedHorror = _toMovieList(await helper.getHorrorMovies());
+        } catch (e) {
+          debugPrint('[initialize] error fetching horror movies: $e');
+        }
+        try {
+          fetchedDrama = _toMovieList(await helper.getDramaMovies());
+        } catch (e) {
+          debugPrint('[initialize] error fetching drama movies: $e');
+        }
+        try {
+          fetchedAnimation = _toMovieList(await helper.getAnimationMovies());
+        } catch (e) {
+          debugPrint('[initialize] error fetching animation movies: $e');
+        }
+      } else {
+        // Fetch TV show genres
+        try {
+          fetchedAction = _toMovieList(await helper.getActionShows());
+        } catch (e) {
+          debugPrint('[initialize] error fetching action shows: $e');
+        }
+        try {
+          fetchedComedy = _toMovieList(await helper.getComedyShows());
+        } catch (e) {
+          debugPrint('[initialize] error fetching comedy shows: $e');
+        }
+        try {
+          fetchedRomance = _toMovieList(await helper.getRomanceShows());
+        } catch (e) {
+          debugPrint('[initialize] error fetching romance shows: $e');
+        }
+        try {
+          fetchedHorror = _toMovieList(await helper.getHorrorShows());
+        } catch (e) {
+          debugPrint('[initialize] error fetching horror shows: $e');
+        }
+        try {
+          fetchedDrama = _toMovieList(await helper.getDramaShows());
+        } catch (e) {
+          debugPrint('[initialize] error fetching drama shows: $e');
+        }
+        try {
+          fetchedAnimation = _toMovieList(await helper.getAnimationShows());
+        } catch (e) {
+          debugPrint('[initialize] error fetching animation shows: $e');
         }
       }
 
@@ -802,14 +879,19 @@ class _MovieListState extends State<MovieList> {
         movies = sortedResults;
         ogMovies = List<Movie>.from(sortedResults);
         moviesCount = movies.length;
-        romanceMovies = fetchedRomanceMovies;
         
+        actionMovies = fetchedAction;
+        comedyMovies = fetchedComedy;
+        romanceMovies = fetchedRomance;
+        horrorMovies = fetchedHorror;
+        dramaMovies = fetchedDrama;
+        animationMovies = fetchedAnimation;
+
         if (movies.isNotEmpty) {
           final random = Random();
           movieOfTheDay = movies[random.nextInt(movies.length)];
         }
 
-        // Suggested top 5 by rating
         suggestedMovies = List<Movie>.from(movies);
         suggestedMovies.sort((a, b) => b.voteAverage.compareTo(a.voteAverage));
         if (suggestedMovies.length > 5) {
