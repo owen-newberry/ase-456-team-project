@@ -4,7 +4,7 @@ size: 4:3
 paginate: true
 ---
 
-# ASE 420 Team Project  
+# ASE 456 Team Project  
 ## Justice Gang  
 ### Movie App — Two-Sprint Review
 
@@ -162,6 +162,10 @@ All team members used AI assistance option #2 (assisted).
 | Acceptance Tests | 33 |
 | Regression Tests | 39 |
 | **Total** | **199** |
+
+---
+
+## Tests & Documentation (cont.)
 
 **Documentation:**
 - Design Docs: `docs/sprint1/`, `docs/sprint2/`
