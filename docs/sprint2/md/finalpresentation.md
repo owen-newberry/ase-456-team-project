@@ -19,6 +19,19 @@ paginate: true
 
 ---
 
+## The Problem
+
+- Movie/TV Show tracking can be annoying/difficult
+- Browsing can be tedious
+
+---
+
+## The Solution
+
+- Movie app that allows for movie and TV show tracking, reviewing, and discovery
+
+---
+
 ## Project Vision & Goals
 
 - Expand functionality to include TV show support and improved discovery
