@@ -8,7 +8,7 @@ description: "Discover movies & TV shows — personalized recommendations, dark 
 
 Discover movies and TV shows with personalized recommendations, dark mode, and daily highlights. The app supports TV show browsing, provides suggestion lists, and includes features to help users find something great quickly.
 
-[View Documentation](https://owen-newberry.github.io/ase-456-team-project/documentation/) · [View on GitHub](https://github.com/owen-newberry/ase-456-team-project/)
+[View Documentation]({{< ref "documentation/_index.md" >}}) · [View on GitHub](https://github.com/owen-newberry/ase-456-team-project/)
 
 ## Key Features
 

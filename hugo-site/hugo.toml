@@ -1,7 +1,7 @@
 baseURL = "https://owen-newberry.github.io/ase-456-team-project/"
 languageCode = "en-us"
 title = "Project Site"
-theme = "PaperMod"
+theme = "simple-theme"
 
 [params]
   githubRepo = "https://github.com/owen-newberry/ase-456-team-project/"

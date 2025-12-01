@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ if .Title }}{{ .Title }} | {{ end }}{{ .Site.Title }}</title>
+    {{ partial "head.html" . }}
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="{{ .Site.BaseURL | absURL }}">{{ .Site.Title }}</a>
+        {{ range .Site.Menus.main }}
+          &nbsp;|&nbsp; <a href="{{ .URL | relURL }}">{{ .Name }}</a>
+        {{ end }}
+      </nav>
+    </header>
+
+    <main>
+      {{ block "main" . }}{{ end }}
+    </main>
+
+    <footer>
+      <p>&copy; {{ now.Format "2006" }} {{ .Site.Title }}</p>
+    </footer>
+  </body>
+</html>

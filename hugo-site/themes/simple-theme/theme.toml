@@ -1,0 +1,22 @@
+name = "Simple"
+license = "MIT"
+min_version = "0.111.0"
+homepage = "https://example.com"
+
+[author]
+name = "site-builder"
+
+[[menu.main]]
+name = "Home"
+url = "/"
+weight = 1
+
+[[menu.main]]
+name = "Documentation"
+url = "/documentation/"
+weight = 2
+
+[[menu.main]]
+name = "About"
+url = "/about/"
+weight = 3
