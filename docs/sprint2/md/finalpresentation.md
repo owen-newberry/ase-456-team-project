@@ -87,18 +87,6 @@ All team members used AI assistance option #2 (assisted).
 
 ---
 
-## Sprint 1 — Objectives
-
-- Research and prototype core features
-	- API investigation for movies and TV shows
-	- UI wireframes for home, detail, and login flow
-- Implement baseline app structure
-	- Login/signup flow skeleton
-	- Basic movie list and details pages
-	- Project scaffolding and repo setup
-
----
-
 ## Sprint 1 — Achievements
 
 - Implemented login → home navigation flow (basic routing)
