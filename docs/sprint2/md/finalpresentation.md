@@ -43,17 +43,47 @@ All team members used AI assistance option #2 (assisted).
 
 ---
 
-## Features & Assigned Requirements (Summary)
+## Metrics & Project Statistics (Sprint Totals)
 
-- Cley Shelton
-	- Features: TV show browsing; navigation from login to home
-	- Requirements: Browse TV shows; navigate from login/signup to home
-- David-Michael Davies
-	- Features: Dark mode/theme switching; Random Movie button; UI polish
-	- Requirements: Toggle themes; consistent UI; random movie discovery
-- Austin Shelton
-	- Features: Suggested Movies; Best Recent Releases; Movie of the Day; In Theaters Now
-	- Requirements: Personalized suggestions; recent releases list; daily highlight; ticket links for in-theaters
+- Total features completed: 18
+- Total LoC: ~2,500 (approx.)
+- Team burndown rate: 100%
+
+---
+
+## Features 
+
+**Cley Shelton (6)**  
+- Create account / sign up  
+- Log in with credentials  
+- Sign out of account  
+- Delete account
+- TV show browsing
+- Navigation from login to home
+
+---
+
+## Features (cont.)
+
+**Austin Shelton (6)**  
+- Mark movies as “watched” in a tracker tab  
+- Leave a review score on watched movies  
+- Write a short review/description
+- Suggested Movies
+- Best Recent Releases
+- Movie of the Day
+
+---
+
+## Features (cont.)
+
+**David-Michael Davies (6)**  
+- Visually appealing user interface  
+- Sort movies by genre  
+- Show related movies on search
+- Dark mode/theme switching
+- Random Movie button
+- UI polish
 
 ---
 
@@ -66,30 +96,16 @@ All team members used AI assistance option #2 (assisted).
 	- Login/signup flow skeleton
 	- Basic movie list and details pages
 	- Project scaffolding and repo setup
-- Begin Cley’s TV show UI components and data parsing
-- Start David-Michael's theme switcher prototype
-- Begin Austin's suggestion logic research and wireframes
 
 ---
 
 ## Sprint 1 — Achievements
 
-- Completed core repo scaffolding and CI for Hugo site (documentation)
 - Implemented login → home navigation flow (basic routing)
 - Basic movie browsing and details view implemented
 - TV show data model researched and initial UI components built by Cley
 - Theme switching prototype implemented (David-Michael)
 - Recommendation logic prototyped and tested with sample data (Austin)
-
----
-
-## Sprint 2 — Objectives
-
-- Finalize TV show integration and navigation flows
-- Polish UI/UX across pages; finalize dark mode and theme toggling
-- Complete suggestion system: Suggested Movies, Best Recent, Movie of the Day
-- Add Random Movie feature and In Theaters Now with ticket links
-- Test end-to-end navigation and stability; prepare for deployment
 
 ---
 
@@ -100,26 +116,76 @@ All team members used AI assistance option #2 (assisted).
 - Dark mode/theme toggle completed and applied site-wide (consistent UI fixes)
 - Random Movie button implemented and wired to data store
 - Suggested Movies and Best Recent Releases sections implemented; Movie of the Day added
-- 'In Theaters Now' list with external ticket links implemented and validated
 
 ---
 
-## Metrics & Project Statistics (Sprint Totals)
+## Reflections: What Went Wrong
 
-- Total features completed: 19 
-- Total LoC: ~2,500 (approx.)
-- Team burndown rate: 100%
+- **API data inconsistencies** — TV vs Movie schemas caused integration delays
+  - *Next time:* Build normalization layer earlier in the project
+- **Design sync across contributors** — Initial style inconsistencies
+  - *Next time:* More clear design from day one
+- **Time management** — Some tasks pushed close to deadlines
+  - *Next time:* More frequent check-ins
 
 ---
 
-## Challenges & Mitigations
+## Reflections: What Went Well
 
-- API data inconsistencies (TV vs Movie schemas)
-	- Mitigation: built normalization layer to present consistent model to UI
-- Syncing design across contributors
-	- Mitigation: agreed on color variables, spacing, and shared CSS tokens
-- Time management
-	- Mitigation: weekly progress reports, enforced mini-deadlines
+- **Team communication** — Weekly syncs kept everyone aligned
+- **Modular architecture** — Easy to integrate individual contributions
+- **100% feature delivery** — All promised features completed
+
+---
+
+## Demo & Artifact Locations
+
+| Artifact | Link |
+|----------|------|
+| Source Code | [github.com/owen-newberry/ase-456-team-project/app](https://github.com/owen-newberry/ase-456-team-project/tree/main/app) |
+| Tests | [github.com/owen-newberry/ase-456-team-project/app/test](https://github.com/owen-newberry/ase-456-team-project/tree/main/app/test) |
+| Documentation | [github.com/owen-newberry/ase-456-team-project/docs](https://github.com/owen-newberry/ase-456-team-project/tree/main/docs) |
+| Github.io | [owen-newberry.github.io//ase-456-team-project/](https://owen-newberry.github.io//ase-456-team-project/) |
+| Youtube Demo | [youtu.be/OdcCspSqY4w](https://youtu.be/OdcCspSqY4w) |
+
+---
+
+## Tests & Documentation
+
+**Test Location:** `app/test/`
+
+| Test Type | Count |
+|-----------|-------|
+| Unit Tests | 64 |
+| Widget Tests | 27 |
+| Integration Tests | 38 |
+| Acceptance Tests | 33 |
+| Regression Tests | 39 |
+| **Total** | **199** |
+
+**Documentation:**
+- Design Docs: `docs/sprint1/`, `docs/sprint2/`
+- Github.io: [owen-newberry.github.io//ase-456-team-project/](https://owen-newberry.github.io//ase-456-team-project/)
+
+---
+
+## Q & A
+
+Questions?
+
+Each team member is available to answer questions about their features.
+
+---
+
+## Thank You!
+
+Thank you for your support throughout this project.
+
+**Links:**
+- 📂 Repository: [github.com/owen-newberry/ase-456-team-project](https://github.com/owen-newberry/ase-456-team-project)
+- 📖 Documentation: [owen-newberry.github.io/ase-456-team-project](https://owen-newberry.github.io/ase-456-team-project/)
+
+**Justice Gang** — Movie App 🎬
 
 ---
 
