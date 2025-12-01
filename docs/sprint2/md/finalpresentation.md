@@ -15,21 +15,7 @@ paginate: true
 - Owen Newberry — Team Lead 
 - Austin Shelton 
 - Cley Shelton 
-- David-Michael Davies 
-
-All team members used AI assistance option #2 (assisted).
-
----
-
-## Team Rules & Working Agreements
-
-- K.I.S.S. (Keep It Simple & Stupid)
-- Start early, finish early — avoid last-minute rushes
-- No surprises: keep status updates transparent
-- Be on time to meetings and respond promptly
-- Commit code to GitHub regularly and push progress
-- Submit weekly progress reports on Canvas
-- Respectful, accountable collaboration; ask for help early
+- David-Michael Davies
 
 ---
 
