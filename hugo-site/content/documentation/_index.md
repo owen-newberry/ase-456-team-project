@@ -6,4 +6,10 @@ documents:
   - title: "Final Presentation"
     filename: "finalpresentation.pdf"
     description: "Project presentation slides."
+  - title: "API Documentation"
+    filename: "api.pdf"
+    description: "API reference documentation for TMDB integration."
+  - title: "User Manual"
+    filename: "manual.pdf"
+    description: "User guide for the Movie App."
 ---
