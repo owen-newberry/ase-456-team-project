@@ -1,0 +1,28 @@
+{{ define "main" }}
+  <div class="container docs-page">
+    <h1>{{ .Title }}</h1>
+    <p>{{ .Description }}</p>
+
+    {{ $docs := .Params.documents }}
+    {{ if not $docs }}
+      <p>No documents found. Add documents to the front matter of this page under <code>documents</code>.</p>
+    {{ else }}
+      <div class="doc-list">
+        {{ range $docs }}
+          <section class="doc-card">
+            <h2>{{ .title }}</h2>
+            <p>{{ .description }}</p>
+            <div class="pdf-viewer">
+              <iframe src="{{ (printf "pdfs/%s#toolbar=0" .filename) | absURL }}" type="application/pdf" width="100%" height="600px" frameborder="0" style="border: none;"></iframe>
+            </div>
+            <div class="doc-actions">
+              <a class="btn" href="{{ (printf "pdfs/%s" .filename) | absURL }}" download>Download</a>
+            </div>
+          </section>
+        {{ end }}
+      </div>
+    {{ end }}
+
+    <p class="return-home">Return to <a href="{{ .Site.BaseURL }}">Home</a></p>
+  </div>
+{{ end }}

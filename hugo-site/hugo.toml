@@ -1,0 +1,25 @@
+baseURL = "https://owen-newberry.github.io/ase-456-team-project/"
+languageCode = "en-us"
+title = "Project Site"
+theme = "PaperMod"
+
+[params]
+  githubRepo = "https://github.com/owen-newberry/ase-456-team-project/"
+
+[[menu.main]]
+  identifier = "home"
+  name = "Home"
+  url = "/"
+  weight = 1
+
+[[menu.main]]
+  identifier = "documentation"
+  name = "Documentation"
+  url = "/documentation/"
+  weight = 2
+
+[[menu.main]]
+  identifier = "about"
+  name = "About"
+  url = "/about/"
+  weight = 3
