@@ -32,6 +32,10 @@ jobs:
       - name: Build
         run: |
           hugo --minify
+          echo "Build complete. Listing public directory:"
+          ls -la public/
+          echo "Index.html contents:"
+          head -50 public/index.html
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v4
