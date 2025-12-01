@@ -3,12 +3,19 @@ name: Build and Deploy Hugo Site
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'hugo-site/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     defaults:
       run:
         working-directory: hugo-site
@@ -35,4 +42,5 @@ jobs:
           path: hugo-site/public
 
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
