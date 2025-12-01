@@ -50,10 +50,13 @@ class MovieList extends StatefulWidget {
   _MovieListState createState() => _MovieListState();
   final bool isDarkMode;
   final ValueChanged<bool> onThemeChanged;
+  final String defaultImage;
+
   MovieList({
     super.key,
     required this.isDarkMode,
     required this.onThemeChanged,
+    this.defaultImage = 'https://images.freeimages.com/images/large-previews/5eb/movie-clapboard-1184339.jpg',
   });
 }
 
